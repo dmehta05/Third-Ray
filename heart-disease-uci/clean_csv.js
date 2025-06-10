@@ -1,24 +1,56 @@
+// Dhruvii Mehta
+// 10 June, 2025
+// uci-heart-disease data set cleaner
+
+// Install these packages:
+// npm install csv-parser csv-stringify
+
+// import necessary modules
 const fs = require('fs');
-const Papa = require('papaparse');
+const csv = require('csv-parser');
+const { stringify } = require('csv-stringify');
 
-// Read CSV file
-const rawCSV = fs.readFileSync('heart_disease_uci.csv', 'utf8');
+// define input and output file paths
+const inputFile = 'heart_disease_uci.csv';
+const outputFile = 'heart_disease_uci_cleaned.csv';
 
-// Parse CSV
-const parsed = Papa.parse(rawCSV, {
-  header: true,
-  skipEmptyLines: true
-});
+// array holds rows that do not have missing entries
+const cleanRows = [];
+let headers = []; // stores the header row
 
-// Remove rows with any '?' values
-const cleanedData = parsed.data.filter(row =>
-  !Object.values(row).some(value => value.trim() === '?')
-);
+// read and parse the CSV file
+fs.createReadStream(inputFile)
+    .pipe(csv()) // csv-parser parses each row
+    .on('headers', (receivedHeaders) => {
+        // store headers
+        headers = receivedHeaders;
+    })
+    .on('data', (row) => {
+        // process each row, check for missing values
+        let hasMissing = false;
+        for (const key in row) {
+            // if an empty entry is found
+            if (row[key] === null || row[key] === undefined || row[key].trim() === '') {
+                hasMissing = true;
+                break; // no need to check further in the same row
+            }
+        }
 
-// Convert back to CSV
-const cleanedCSV = Papa.unparse(cleanedData);
+        // filter valid rows
+        if (!hasMissing) {
+            cleanRows.push(row);
+        }
+    })
+    .on('end', () => {
+        console.log('CSV file successfully processed.');
 
-// Save cleaned CSV
-fs.writeFileSync('heart_disease_cleaned.csv', cleanedCSV);
-
-console.log('✅ Cleaned CSV saved as heart_disease_cleaned.csv');
+        // write the clean data to a new CSV file, including the headers
+        stringify(cleanRows, { header: true, columns: headers }, (err, output) => {
+            if (err) throw err;
+            fs.writeFileSync(outputFile, output);
+            console.log(`Cleaned data saved to ${outputFile}`);
+        });
+    })
+    .on('error', (error) => {
+        console.error('Error reading CSV file:', error);
+    });
