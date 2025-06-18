@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <style>
+    #mainChart {
+      width: 600px;
+      height: 400px;
+    }
+  </style>
+</head>
+<body>
+  <div id="mainChart"></div>
+  <script>
+    var chart = echarts.init(document.getElementById('mainChart'));
+    var option = {
+      title: { text: 'Heart Disease by Age' },
+      xAxis: { type: 'category', data: ['20-30', '30-40', '40-50'] },
+      yAxis: { type: 'value' },
+      series: [{ type: 'bar', data: [5, 10, 15] }]
+    };
+    chart.setOption(option);
+  </script>
+</body>
+</html>
